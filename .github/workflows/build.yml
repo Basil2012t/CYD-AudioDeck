@@ -1,0 +1,43 @@
+
+name: Build CYD AudioDeck
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/**'
+      - 'platformio.ini'
+      - '.github/workflows/build.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        environment:
+          - cyd_ili9341_2
+          - cyd_ili9341
+          - cyd_st7789
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install PlatformIO
+        run: pip install platformio
+
+      - name: Build firmware
+        run: pio run -e ${{ matrix.environment }}
+
+      - name: Upload BIN files
+        uses: actions/upload-artifact@v4
+        with:
+          name: AudioDeck-${{ matrix.environment }}
+          path: .pio/build/${{ matrix.environment }}/*.bin
+          if-no-files-found: error
